@@ -1,5 +1,7 @@
 
 
+
+
 PImage bg;
 PImage cabbage;
 PImage gameover;
@@ -107,9 +109,9 @@ void draw() {
           gameState = GAME_LOSE;
         }
         //touch cabbage
-        //cabbageX, cabbageY
         if( x+80 > cabbageX && x < cabbageX+80 && y < cabbageY+80 && y+80 > cabbageY ){
           life +=1;
+          cabbageX = cabbageY =640;
         }
         
         //sun
@@ -127,18 +129,18 @@ void draw() {
        //cabbage
         image(cabbage, cabbageX, cabbageY);
        
-   
-		
-
-		
-
 		// Game Lose
+    case GAME_LOSE:
+    
   }
 }
 
 void keyPressed(){
   if (key == CODED) {
     switch (keyCode) {
+      case UP:
+        y -= grid;
+        break;
       case DOWN:
         y += grid;
         break;
