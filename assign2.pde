@@ -179,6 +179,9 @@ void draw() {
           life -= 1;
           groundhogX = GRID*4;
           groundhogY = GRID;
+          leftPressed = false;
+          rightPressed = false;
+          downPressed = false;
         }
         if( life == 0){
           gameState = GAME_LOSE;
