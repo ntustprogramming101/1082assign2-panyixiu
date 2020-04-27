@@ -1,7 +1,4 @@
 
-
-
-
 PImage bg;
 PImage cabbage;
 PImage gameover;
@@ -18,19 +15,38 @@ PImage soil;
 PImage soldier;
 PImage title;
 
-int soldierSpeed,floorS;
-int soldierWidth = 40;
-int grid = 80;
-int x = grid*4;
-int y = grid;
-int cabbageX,cabbageY;
-int life = 2;
+final int GRID = 80;
 
 final int GAME_START = 0;
 final int GAME_RUN = 1;
 final int GAME_LOSE = 2;
 
-int gameState = 0; 
+final int BUTTON_TOP = 360;
+final int BUTTON_BOTTOM = 360+60;
+final int BUTTON_LEFT = 248;
+final int BUTTON_RIGHT = 248+144;
+
+int soldierSpeed,soldierY;
+int soldierWidth = 40;
+
+
+int cabbageX,cabbageY;
+int life = 2;
+int lifeX = 10; 
+int lifeY = 10;
+int lifeSpacing = 70;
+int actionFrame;  //groundhog's moving frame
+
+float groundhogX = GRID*4; 
+float groundhogY = GRID;
+float groundhogLestX, groundhogLestY;
+float lastTime; //time when the groundhog finished moving
+
+boolean downPressed = false;
+boolean leftPressed = false;
+boolean rightPressed = false;
+
+int gameState = 0;
 
 void setup() {
 	size(640, 480, P2D);
@@ -54,17 +70,33 @@ void setup() {
   cabbageX = floor(random(0,8))*80;
   cabbageY = (floor(random(0,4))+2)*80;
   
-  floorS = (floor(random(4))+1)*80+80; //soldier's Y position
-  soldierSpeed = 0;
+  soldierY = (floor(random(4))+1)*80+80; //soldier's Y position
+  soldierSpeed = 3;
+  
+  
+  gameState = GAME_START;
+  
 }
 
 void draw() {
+  
 	// Game Start
   switch( gameState ){
+    
     case GAME_START:
         image(title,0,0);
         image(startNormal, 248,360);
-        
+        //mouse action
+        if (mouseX > BUTTON_LEFT && mouseX < BUTTON_RIGHT 
+        && mouseY > BUTTON_TOP && mouseY < BUTTON_BOTTOM){
+          if(mousePressed){
+            gameState = GAME_RUN;
+           }else{
+            image(startHovered,248,360);
+           
+          }
+        }
+        break;
         
     // Game Run
     case GAME_RUN:
@@ -81,79 +113,161 @@ void draw() {
         noStroke();
         rect(0,145,640,15);
         
-        //2 lives
-        image ( lifeImg ,10 ,10);
-        image ( lifeImg ,80 ,10);
-        
-        //groundhog
-        image ( groundhog , x ,y);
-        
-        //groundhog range
-        if( x <=0){
-          x=0;
-        }
-        if( x >= width-80){
-          x=width-80;
-        }
-        if( y >= height-80){
-          y = height-80;
-        }
-        
-        //touch soldier
-        if( x+80 > soldierSpeed - soldierWidth && x < soldierSpeed - soldierWidth+80 && y < floorS+80 && y+80 > floorS ){
-          life -= 1;
-          x = grid*4;
-          y = grid;
-        }
-        if( life == 0){
-          gameState = GAME_LOSE;
-        }
-        //touch cabbage
-        if( x+80 > cabbageX && x < cabbageX+80 && y < cabbageY+80 && y+80 > cabbageY ){
-          life +=1;
-          cabbageX = cabbageY =640;
-        }
-        
         //sun
         fill(255,255,0);
         ellipse(640-50,50,130,130);  
         fill(253,184,19);
         ellipse(640-50,50,120,120);
         
+        //lives
+        for(int i = 0 ; i < life ; i++ ){
+          lifeX = 10 + i*lifeSpacing;
+          image(lifeImg,lifeX,lifeY);
+        }
+        
+        //groundhog range
+        if( groundhogX <=0){
+          groundhogX=0;
+        }
+        if( groundhogX >= width-80){
+          groundhogX=width-80;
+        }
+        if( groundhogY >= height-80){
+          groundhogY = height-80;
+        }
+        
+        //groundhog action
+        if (downPressed == false && leftPressed == false && rightPressed == false) {
+          image(groundhog, groundhogX, groundhogY);
+        }
+        
+        if (downPressed) {
+          actionFrame++;
+          if (actionFrame > 0 && actionFrame < 15) {
+            groundhogY += GRID / 15.0;
+            image(groundhogD, groundhogX, groundhogY);
+          } else {
+            groundhogY = groundhogLestY + GRID;
+            downPressed = false;
+          }
+        }
+        //draw the groundhogLeft image between 1-14 frames
+        if (leftPressed) {
+          actionFrame++;
+          if (actionFrame > 0 && actionFrame < 15) {
+            groundhogX -= GRID / 15.0;
+            image(groundhogL, groundhogX, groundhogY);
+          } else {
+            groundhogX = groundhogLestX - GRID;
+            leftPressed = false;
+          }
+        }
+        //draw the groundhogRight image between 1-14 frames
+        if (rightPressed) {
+          actionFrame++;
+          if (actionFrame > 0 && actionFrame < 15) {
+            groundhogX += GRID / 15.0;
+            image(groundhogR, groundhogX, groundhogY);
+          } else {
+            groundhogX = groundhogLestX + GRID;
+            rightPressed = false;
+          }
+        }
+        
+        //touch soldier
+        if( groundhogX+80 > soldierSpeed - soldierWidth && groundhogX < soldierSpeed - soldierWidth+80 && groundhogY < soldierY+80 && groundhogY+80 > soldierY ){
+          life -= 1;
+          groundhogX = GRID*4;
+          groundhogY = GRID;
+        }
+        if( life == 0){
+          gameState = GAME_LOSE;
+        }
+        //touch cabbage
+        if( groundhogX+80 > cabbageX && groundhogX < cabbageX+80 && groundhogY < cabbageY+80 && groundhogY+80 > cabbageY ){
+          life +=1;
+          cabbageX = cabbageY =640;
+        }
+        
         soldierSpeed += 6; // x=x+6
-        soldierSpeed %= 900;
+        //soldierSpeed %= 800;
         
         //Soldier's position
-        image(soldier,soldierSpeed - soldierWidth ,floorS);
+        image(soldier,soldierSpeed - soldierWidth ,soldierY);
+        if(soldierSpeed - soldierWidth >= 800){
+          soldierSpeed =-50;
+          soldierY = (floor(random(4))+1)*80+80; //soldier's Y position
+        }
         
        //cabbage
         image(cabbage, cabbageX, cabbageY);
+        
+        if(life == 0){
+          gameState = 2;
+        }
+        break;
        
 		// Game Lose
     case GAME_LOSE:
-    
+      image(gameover,0,0);
+      image(restartNormal,BUTTON_LEFT,BUTTON_TOP);
+      
+      if(mouseX > BUTTON_LEFT && mouseX < BUTTON_RIGHT &&
+      mouseY > BUTTON_TOP && mouseY < BUTTON_BOTTOM){
+        image(restartHovered,BUTTON_LEFT,BUTTON_TOP);
+        if(mousePressed){
+          downPressed =false;
+          leftPressed = false;
+          rightPressed = false;
+          soldierSpeed = 0;
+          soldierY = floor(random(4))*GRID + GRID*2;
+          soldierSpeed = 3;
+          cabbageX = floor(random(8))*GRID;
+          cabbageY = floor(random(4))*GRID + GRID*2;
+          life = 2;
+          groundhogX = GRID*4;
+          groundhogY = GRID;
+          
+          
+          gameState = 0;
+        }
+      }
+        break;
+        
+      default:
   }
+    
 }
 
 void keyPressed(){
+  float newTime = millis(); //time when the groundhog started moving
   if (key == CODED) {
     switch (keyCode) {
-      case UP:
-        y -= grid;
-        break;
+      
       case DOWN:
-        y += grid;
+        if (newTime - lastTime > 250) {
+          downPressed = true;
+          actionFrame = 0;
+          groundhogLestY = groundhogY;
+          lastTime = newTime;
+        }
         break;
       case LEFT:
-        x -= grid;
+        if (newTime - lastTime > 250) {
+          leftPressed = true;
+          actionFrame = 0;
+          groundhogLestX = groundhogX;
+          lastTime = newTime;
+        }
         break;
       case RIGHT:
-        x += grid;
+        if (newTime - lastTime > 250) {
+          rightPressed = true;
+          actionFrame = 0;
+          groundhogLestX = groundhogX;
+          lastTime = newTime;
         break;
+        }
     }
   }
-}
-
-void keyReleased(){
-
 }
